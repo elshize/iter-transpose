@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["transposed_iter","A free function version of [`IntoTransposedIter::into_transposed_iter`]."]],"struct":[["TransposedIter","Result of calling [`IntoTransposedIter::into_transposed_iter`]."]],"trait":[["IntoTransposedIter","Provides [`IntoTransposedIter::into_transposed_iter`] function."]]});
