@@ -40,7 +40,7 @@ pub trait IntoTransposedIter {
     /// assert_eq!(none_iter.next(), Some(None));
     /// ```
     ///
-    /// The main usecase is when there is some optional data loaded separately from the required
+    /// The main use case is when there is some optional data loaded separately from the required
     /// data, e.g., from another file or other source, and we want to produce either a value or
     /// `None` for each element from the required list, depending on whether the optional data was
     /// loaded or not. (See the example below.)
@@ -133,7 +133,6 @@ pub trait IntoTransposedIter {
     /// These two are equivalent:
     ///
     /// ```
-    /// #![feature(iter_map_while)]
     /// # use iter_transpose::IntoTransposedIter;
     /// assert_eq!(
     ///     Some((0..5))
