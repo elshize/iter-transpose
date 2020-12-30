@@ -1,6 +1,12 @@
 This crate provides `IntoTransposedIter` trait that turns an `Option<I: Iterator>`
 into an iterator of options.
 
+# API Documentation
+
+https://elshize.github.io/iter-transpose/
+
+# Overview
+
 Notice that the type of the item of the resulting iterator is
 `Option<<T as IntoIterator>::Item>`, not to confuse with the return type of the
 `Iterator::next` method, which will be `Option<Option<<T as IntoIterator>::Item>>`.
