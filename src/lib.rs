@@ -1,19 +1,14 @@
 //! This crate provides the [`IterTranspose`] trait that turns an `Option<I: IntoIterator>`
-//! into an iterator of options or a collection of option (the same is implemented for `Result`):
+//! (or `Result<I: IntoIterator, E>`) into an iterator of `Option<I::Item>` (or `Result<I::Item, E>`):
 //!
 //! ```
 //! use iter_transpose::IterTranspose;
 //!
-//! assert_eq!(Some(vec![1, 2, 3]).transpose::<Vec<_>>(), vec![Some(1), Some(2), Some(3)]);
 //! assert_eq!(
 //!     Some(vec![1, 2, 3]).transpose_into_iter().collect::<Vec<_>>(),
 //!     vec![Some(1), Some(2), Some(3)],
 //! );
 //!
-//! assert_eq!(
-//!     Result::<Vec<i32>, ()>::Ok(vec![1, 2, 3]).transpose::<Vec<_>>(),
-//!     vec![Result::<i32, ()>::Ok(1), Ok(2), Ok(3)]
-//! );
 //! assert_eq!(
 //!     Result::<Vec<i32>, ()>::Ok(vec![1, 2, 3])
 //!         .transpose_into_iter()
@@ -25,21 +20,11 @@
 //! **Note:** if the value is either `None` or `Err`, the iterator will be **infinite**.
 //! You can use [`take_while_some`][`OptionTransposedIter::take_while_some`]
 //! or [`take_while_ok`][`ResultTransposedIter::take_while_ok`] to truncate them.
-//! Note that [`transpose`][`IterTranspose::transpose`] will use these functions under the hood,
-//! so there is no risk of infinite loop when using that function:
 //!
 //!
 //! ```
 //! use iter_transpose::IterTranspose;
 //!
-//! assert_eq!(
-//!     Option::<Vec<i32>>::None.transpose::<Vec<_>>(),
-//!     vec![],
-//! );
-//! assert_eq!(
-//!     Result::<Vec<i32>, ()>::Err(()).transpose::<Vec<_>>(),
-//!     vec![],
-//! );
 //! assert_eq!(
 //!     Option::<Vec<i32>>::None
 //!         .transpose_into_iter()
@@ -160,17 +145,13 @@
     clippy::inline_always
 )]
 
-use std::iter::FromIterator;
-
-/// Provides [`transpose`][`IterTranspose::transpose`] and
-/// [`transpose_into_iter`][`IterTranspose::transpose_into_iter`]
-/// functions for the implementing structs.
+/// Provides [`transpose_into_iter`][`IterTranspose::transpose_into_iter`]
+/// function for the implementing structs.
 ///
-/// This trait is already implemented for both [`Option`] and [`Result`], and it functions as an
+/// This trait is implemented for both [`Option`] and [`Result`], and it functions as an
 /// extension of the API of these two structs. See the [crate-level documentation](index.html)
 /// for more information and examples.
 ///
-/// [`Option::transpose`]: https://doc.rust-lang.org/std/option/enum.Option.html#method.transpose
 /// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
 /// [`Result`]: https://doc.rust-lang.org/stable/std/result/enum.Result.html
 pub trait IterTranspose {
@@ -178,36 +159,8 @@ pub trait IterTranspose {
     type Iterable: IntoIterator;
     /// This is `Option<T::Item>` for `Option<T>` and `Result<T::Item, E>` for `Result<T, E>`.
     type TransposedItem;
-    /// The iterator type produced by [`transpose`][`IterTranspose::transpose`].
+    /// The iterator type produced by [`transpose_into_iter`][`IterTranspose::transpose_into_iter`].
     type Iter: Iterator<Item = Self::TransposedItem>;
-
-    /// If called on an option containing a collection or an iterator, it produces a collection of
-    /// type `T` of options, and similarly for results.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use iter_transpose::IterTranspose;
-    /// assert_eq!(
-    ///     Some(vec![1, 2, 3]).transpose::<Vec<_>>(),
-    ///     vec![Some(1), Some(2), Some(3)],
-    /// );
-    /// assert_eq!(
-    ///     Result::<Vec<i32>, ()>::Ok(vec![1, 2, 3]).transpose::<Vec<_>>(),
-    ///     vec![Result::<i32, ()>::Ok(1), Ok(2), Ok(3)],
-    /// );
-    /// assert_eq!(
-    ///     Option::<Vec<i32>>::None.transpose::<Vec<_>>(),
-    ///     vec![],
-    /// );
-    /// assert_eq!(
-    ///     Result::<Vec<i32>, ()>::Err(()).transpose::<Vec<_>>(),
-    ///     vec![],
-    /// );
-    /// ```
-    fn transpose<T>(self) -> T
-    where
-        T: FromIterator<Self::TransposedItem>;
 
     /// If called on an option containing a collection or an iterator, it produces an iterator
     /// of options, and similarly for results.
@@ -244,13 +197,6 @@ where
     type Iterable = I;
     type Iter = OptionTransposedIter<<Self::Iterable as IntoIterator>::IntoIter>;
 
-    fn transpose<T>(self) -> T
-    where
-        T: FromIterator<Self::TransposedItem>,
-    {
-        self.transpose_into_iter().take_while_some().collect::<T>()
-    }
-
     fn transpose_into_iter(self) -> Self::Iter {
         OptionTransposedIter {
             optional_iter: self.map(Self::Iterable::into_iter),
@@ -266,13 +212,6 @@ where
     type TransposedItem = Result<I::Item, E>;
     type Iterable = I;
     type Iter = ResultTransposedIter<<Self::Iterable as IntoIterator>::IntoIter, E>;
-
-    fn transpose<T>(self) -> T
-    where
-        T: FromIterator<Self::TransposedItem>,
-    {
-        self.transpose_into_iter().take_while_ok().collect::<T>()
-    }
 
     fn transpose_into_iter(self) -> Self::Iter {
         ResultTransposedIter {
@@ -372,7 +311,10 @@ where
     /// ```
     /// # use iter_transpose::IterTranspose;
     /// assert_eq!(
-    ///     Some(vec![1, 2]).transpose_into_iter().unwrap_while_some().collect::<Vec<_>>(),
+    ///     Result::<Vec<i32>, ()>::Ok(vec![1, 2])
+    ///         .transpose_into_iter()
+    ///         .unwrap_while_ok()
+    ///         .collect::<Vec<_>>(),
     ///     vec![1, 2],
     /// );
     /// ```
