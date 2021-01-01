@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["iter_transpose"] = [{"text":"impl&lt;I&gt; Unpin for TransposedIter&lt;I&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;I: Unpin,&nbsp;</span>","synthetic":true,"types":[]}];
+implementors["iter_transpose"] = [{"text":"impl&lt;I&gt; Unpin for OptionTransposedIter&lt;I&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;I: Unpin,&nbsp;</span>","synthetic":true,"types":[]},{"text":"impl&lt;I, E&gt; Unpin for ResultTransposedIter&lt;I, E&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;E: Unpin,<br>&nbsp;&nbsp;&nbsp;&nbsp;I: Unpin,&nbsp;</span>","synthetic":true,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
