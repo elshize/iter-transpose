@@ -384,14 +384,6 @@
 <span id="381">381</span>
 <span id="382">382</span>
 <span id="383">383</span>
-<span id="384">384</span>
-<span id="385">385</span>
-<span id="386">386</span>
-<span id="387">387</span>
-<span id="388">388</span>
-<span id="389">389</span>
-<span id="390">390</span>
-<span id="391">391</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! This crate provides the [`IterTranspose`] trait that turns an `Option&lt;I: IntoIterator&gt;`</span>
 <span class="doccomment">//! (or `Result&lt;I: IntoIterator, E&gt;`) into an iterator of `Option&lt;I::Item&gt;` (or `Result&lt;I::Item, E&gt;`):</span>
@@ -550,12 +542,8 @@
 <span class="doccomment">/// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html</span>
 <span class="doccomment">/// [`Result`]: https://doc.rust-lang.org/stable/std/result/enum.Result.html</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">IterTranspose</span> {
-    <span class="doccomment">/// The type `T` inside `Option&lt;T&gt;` or `Result&lt;T, _&gt;`.</span>
-    <span class="kw">type</span> <span class="ident">Iterable</span>: <span class="ident">IntoIterator</span>;
-    <span class="doccomment">/// This is `Option&lt;T::Item&gt;` for `Option&lt;T&gt;` and `Result&lt;T::Item, E&gt;` for `Result&lt;T, E&gt;`.</span>
-    <span class="kw">type</span> <span class="ident">TransposedItem</span>;
     <span class="doccomment">/// The iterator type produced by [`transpose_into_iter`][`IterTranspose::transpose_into_iter`].</span>
-    <span class="kw">type</span> <span class="ident">Iter</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">TransposedItem</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Iter</span>: <span class="ident">Iterator</span>;
 
     <span class="doccomment">/// If called on an option containing a collection or an iterator, it produces an iterator</span>
     <span class="doccomment">/// of options, and similarly for results.</span>
@@ -588,13 +576,11 @@
 <span class="kw">where</span>
     <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
 {
-    <span class="kw">type</span> <span class="ident">TransposedItem</span> <span class="op">=</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">I</span>::<span class="ident">Item</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Iterable</span> <span class="op">=</span> <span class="ident">I</span>;
-    <span class="kw">type</span> <span class="ident">Iter</span> <span class="op">=</span> <span class="ident">OptionTransposedIter</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Iterable</span> <span class="kw">as</span> <span class="ident">IntoIterator</span><span class="op">&gt;</span>::<span class="ident">IntoIter</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Iter</span> <span class="op">=</span> <span class="ident">OptionTransposedIter</span><span class="op">&lt;</span><span class="ident">I</span>::<span class="ident">IntoIter</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">transpose_into_iter</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Iter</span> {
         <span class="ident">OptionTransposedIter</span> {
-            <span class="ident">optional_iter</span>: <span class="self">self</span>.<span class="ident">map</span>(<span class="self">Self</span>::<span class="ident">Iterable</span>::<span class="ident">into_iter</span>),
+            <span class="ident">inner</span>: <span class="self">self</span>.<span class="ident">map</span>(<span class="ident">I</span>::<span class="ident">into_iter</span>),
         }
     }
 }
@@ -604,13 +590,11 @@
     <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
     <span class="ident">E</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Debug</span>,
 {
-    <span class="kw">type</span> <span class="ident">TransposedItem</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">I</span>::<span class="ident">Item</span>, <span class="ident">E</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Iterable</span> <span class="op">=</span> <span class="ident">I</span>;
-    <span class="kw">type</span> <span class="ident">Iter</span> <span class="op">=</span> <span class="ident">ResultTransposedIter</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Iterable</span> <span class="kw">as</span> <span class="ident">IntoIterator</span><span class="op">&gt;</span>::<span class="ident">IntoIter</span>, <span class="ident">E</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Iter</span> <span class="op">=</span> <span class="ident">ResultTransposedIter</span><span class="op">&lt;</span><span class="ident">I</span>::<span class="ident">IntoIter</span>, <span class="ident">E</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">transpose_into_iter</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Iter</span> {
         <span class="ident">ResultTransposedIter</span> {
-            <span class="ident">result_iter</span>: <span class="self">self</span>.<span class="ident">map</span>(<span class="self">Self</span>::<span class="ident">Iterable</span>::<span class="ident">into_iter</span>),
+            <span class="ident">inner</span>: <span class="self">self</span>.<span class="ident">map</span>(<span class="ident">I</span>::<span class="ident">into_iter</span>),
         }
     }
 }
@@ -619,7 +603,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OptionTransposedIter</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> {
-    <span class="ident">optional_iter</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>,
+    <span class="ident">inner</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> <span class="ident">OptionTransposedIter</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>
@@ -665,7 +649,7 @@
     <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">I</span>::<span class="ident">Item</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">optional_iter</span>
+        <span class="self">self</span>.<span class="ident">inner</span>
             .<span class="ident">as_mut</span>()
             .<span class="ident">map_or</span>(<span class="prelude-val">Some</span>(<span class="prelude-val">None</span>), <span class="op">|</span><span class="ident">iter</span><span class="op">|</span> <span class="ident">iter</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="prelude-val">Some</span>))
     }
@@ -675,7 +659,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`Result`]: https://doc.rust-lang.org/stable/std/result/enum.Result.html</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResultTransposedIter</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="ident">result_iter</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">E</span><span class="op">&gt;</span>,
+    <span class="ident">inner</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">E</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">E</span><span class="op">&gt;</span> <span class="ident">ResultTransposedIter</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">E</span><span class="op">&gt;</span>
@@ -726,7 +710,7 @@
     <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">I</span>::<span class="ident">Item</span>, <span class="ident">E</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">result_iter</span>.<span class="ident">as_mut</span>() {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">as_mut</span>() {
             <span class="prelude-val">Ok</span>(<span class="ident">iter</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iter</span>.<span class="ident">next</span>().<span class="ident">map</span>(<span class="prelude-val">Ok</span>),
             <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">clone</span>())),
         }
