@@ -155,12 +155,8 @@
 /// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
 /// [`Result`]: https://doc.rust-lang.org/stable/std/result/enum.Result.html
 pub trait IterTranspose {
-    /// The type `T` inside `Option<T>` or `Result<T, _>`.
-    type Iterable: IntoIterator;
-    /// This is `Option<T::Item>` for `Option<T>` and `Result<T::Item, E>` for `Result<T, E>`.
-    type TransposedItem;
     /// The iterator type produced by [`transpose_into_iter`][`IterTranspose::transpose_into_iter`].
-    type Iter: Iterator<Item = Self::TransposedItem>;
+    type Iter: Iterator;
 
     /// If called on an option containing a collection or an iterator, it produces an iterator
     /// of options, and similarly for results.
@@ -193,13 +189,11 @@ impl<I> IterTranspose for Option<I>
 where
     I: IntoIterator,
 {
-    type TransposedItem = Option<I::Item>;
-    type Iterable = I;
-    type Iter = OptionTransposedIter<<Self::Iterable as IntoIterator>::IntoIter>;
+    type Iter = OptionTransposedIter<I::IntoIter>;
 
     fn transpose_into_iter(self) -> Self::Iter {
         OptionTransposedIter {
-            optional_iter: self.map(Self::Iterable::into_iter),
+            inner: self.map(I::into_iter),
         }
     }
 }
@@ -209,13 +203,11 @@ where
     I: IntoIterator,
     E: Clone + std::fmt::Debug,
 {
-    type TransposedItem = Result<I::Item, E>;
-    type Iterable = I;
-    type Iter = ResultTransposedIter<<Self::Iterable as IntoIterator>::IntoIter, E>;
+    type Iter = ResultTransposedIter<I::IntoIter, E>;
 
     fn transpose_into_iter(self) -> Self::Iter {
         ResultTransposedIter {
-            result_iter: self.map(Self::Iterable::into_iter),
+            inner: self.map(I::into_iter),
         }
     }
 }
@@ -224,7 +216,7 @@ where
 ///
 /// [`Option`]: https://doc.rust-lang.org/std/option/enum.Option.html
 pub struct OptionTransposedIter<I> {
-    optional_iter: Option<I>,
+    inner: Option<I>,
 }
 
 impl<I> OptionTransposedIter<I>
@@ -270,7 +262,7 @@ where
     type Item = Option<I::Item>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.optional_iter
+        self.inner
             .as_mut()
             .map_or(Some(None), |iter| iter.next().map(Some))
     }
@@ -280,7 +272,7 @@ where
 ///
 /// [`Result`]: https://doc.rust-lang.org/stable/std/result/enum.Result.html
 pub struct ResultTransposedIter<I, E> {
-    result_iter: Result<I, E>,
+    inner: Result<I, E>,
 }
 
 impl<I, E> ResultTransposedIter<I, E>
@@ -331,7 +323,7 @@ where
     type Item = Result<I::Item, E>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.result_iter.as_mut() {
+        match self.inner.as_mut() {
             Ok(iter) => iter.next().map(Ok),
             Err(err) => Some(Err(err.clone())),
         }
